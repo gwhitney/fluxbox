@@ -1113,6 +1113,7 @@ void Fluxbox::save_rc() {
     XrmDatabase new_rc = 0;
 
     string dbfile(getRcFilename());
+    string tmpdbfile = dbfile + "-tmp";
 
     if (!dbfile.empty()) {
         m_resourcemanager.save(dbfile.c_str(), dbfile.c_str());
@@ -1148,7 +1149,12 @@ void Fluxbox::save_rc() {
     XrmDatabase old_rc = XrmGetFileDatabase(dbfile.c_str());
 
     XrmMergeDatabases(new_rc, &old_rc);
-    XrmPutFileDatabase(old_rc, dbfile.c_str());
+    XrmPutFileDatabase(old_rc, tmpdbfile.c_str());
+    std::string sortLine = "sort -k 1 -o " + dbfile + " " + tmpdbfile;
+    int rc = std::system(sortLine.c_str());
+    std::string cleanupLine = "rm " + tmpdbfile;
+    if (rc != 0 ) { cleanupLine = "mv " + tmpdbfile + " " + dbfile; }
+    std::system(cleanupLine.c_str());
     XrmDestroyDatabase(old_rc);
 
     fbdbg<<__FILE__<<"("<<__LINE__<<"): ------------ SAVING DONE"<<endl;
